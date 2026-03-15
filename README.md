@@ -1,58 +1,72 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# APIArsenal
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Multi-tenant modular API platform built with Laravel. One backend, one dashboard, project-scoped data. Each project can enable modules (Blog, Media, Orders, etc.) and consume APIs keyed by project.
 
-## About Laravel
+## Architecture
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Platform + modules:** Platform domains (Projects, ApiKeys, ProjectMembers, Usage, Audit) live under `app/Domains/Platform/`. Feature modules (Blog, Media, Settings, etc.) live under `app/Domains/Modules/`.
+- **Project = tenant:** Isolation is by `project_id`. All project-owned tables and APIs are scoped to the current project.
+- **Thin controllers, action-based logic:** Business logic lives in Actions; controllers stay thin. Responses use API Resources.
+- **Module contract:** Every module is self-contained (models, actions, requests, controllers, resources, policies, docs, seeders) and follows [docs/MODULE_CONTRACT_BLUEPRINT.md](docs/MODULE_CONTRACT_BLUEPRINT.md).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Documentation
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Doc | Purpose |
+|-----|---------|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Platform style, tenancy, modules, API structure |
+| [MODULE_CONTRACT_BLUEPRINT.md](docs/MODULE_CONTRACT_BLUEPRINT.md) | Module design, metadata, responsibilities |
+| [FOLDER_STRUCTURE.md](docs/FOLDER_STRUCTURE.md) | Domain-first layout, Platform vs Modules |
+| [SCHEMA_BLUEPRINT.md](docs/SCHEMA_BLUEPRINT.md) | Database schema and migrations |
+| [IMPLEMENTATION_ORDER.md](docs/IMPLEMENTATION_ORDER.md) | Phased build order (foundation → platform → modules) |
+| [dev-workflow.md](docs/dev-workflow.md) | Development workflow and conventions |
+| [api-style.md](docs/api-style.md) | API design and style |
 
-## Learning Laravel
+## Getting started
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Install and run
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+# Configure .env (DB, FRONTEND_URL). Default: MySQL, DB_DATABASE=api_arsenal
+php artisan migrate
+php artisan db:seed
+npm install
+# Run backend + Vite together:
+composer dev
+# Or separately: php artisan serve (backend) and npm run dev (frontend)
+```
 
-## Laravel Sponsors
+Open the app at `http://localhost:8000` (or the URL from `php artisan serve`). The React SPA is served for all routes; API is under `/api`.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Laragon (https://api-arsenal.test)
 
-### Premium Partners
+1. Point the Laragon site to this project and ensure the host is `api-arsenal.test`.
+2. In `.env` set:
+   - `APP_URL=https://api-arsenal.test`
+   - `FRONTEND_URL=https://api-arsenal.test`
+   - Add `api-arsenal.test` to `SANCTUM_STATEFUL_DOMAINS` (e.g. `localhost,127.0.0.1,api-arsenal.test`).
+3. Run `npm run build` so the frontend is built and served by Laravel at https://api-arsenal.test/.
+4. Visit https://api-arsenal.test/ — the React SPA loads from the same origin. For live reload during frontend dev, run `npm run dev` and use `http://localhost:8000` or configure Vite for HTTPS.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Code quality
 
-## Contributing
+- **Backend:** `composer format` (Laravel Pint)
+- **Frontend:** `npm run lint`, `npm run format` (ESLint, Prettier)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+See [docs/IMPLEMENTATION_ORDER.md](docs/IMPLEMENTATION_ORDER.md) for the recommended build sequence.
 
-## Code of Conduct
+## Cursor commands
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Development is guided by Cursor commands and rules. See [.cursor/commands/README.md](.cursor/commands/README.md) for:
 
-## Security Vulnerabilities
+- `/bootstrap-apiarsenal` — full backend skeleton
+- `/create-module` — new module in `app/Domains/Modules/{Name}`
+- `/create-platform-domain` — new platform domain in `app/Domains/Platform/{Name}`
+- `/generate-api-endpoint`, `/generate-migration`, `/create-feature-test`, and more.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Commands assume compliance with the docs above and the rules in `.cursor/` (e.g. api-arsenal-architecture, api-arsenal-backend, api-arsenal-testing).
 
 ## License
 

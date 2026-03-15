@@ -12,14 +12,14 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database.
+     * Minimal seed for local development; one demo user for testing auth.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'password' => 'password',
         ]);
     }
 }
