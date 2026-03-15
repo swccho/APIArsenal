@@ -1,0 +1,111 @@
+---
+description: APIArsenal testing principles, tenancy tests, API tests, and definition of done
+globs: "**/tests/**/*.php"
+alwaysApply: false
+---
+
+# APIArsenal Testing Rules
+
+## Project Context
+
+APIArsenal is a multi-tenant modular backend platform. Testing is critical because architecture mistakes, tenancy bugs, and inconsistent API behavior can cause serious issues.
+
+Tests must verify: correctness, tenancy isolation, security boundaries, API consistency, module behavior, regression safety.
+
+---
+
+## 1. General Testing Principles
+
+- **Testing is required**: Important behavior must be tested. Do not ship major features without tests.
+- **Test behavior, not implementation**: Focus on observable behavior and business rules.
+- **Prefer readable tests**: Tests must be easy to understand and maintain.
+- **Keep test setup clean**: Use factories, helpers, and clear arrangement patterns.
+- **Every important bug → a test**: When fixing a bug, add or update a test that would catch the regression.
+
+---
+
+## 2. Test Type Strategy
+
+- **Prefer feature tests for API behavior**: Most endpoint behavior (validation, auth, authz, tenancy, status, response shape, persistence) should use feature/integration tests.
+- **Use unit tests for focused domain logic**: Small actions, value objects, pure domain services, transformation logic, internal rule checks.
+- **Do not over-mock**: Prefer realistic testing. Do not mock large parts of the framework unless there is a clear need.
+
+---
+
+## 3. Tenancy Testing Rules
+
+- **Tenancy tests are mandatory**: Multi-tenant boundaries must be tested explicitly.
+- **Test cross-project isolation**: Verify project A cannot read/update/delete project B data; list endpoints only return current project data.
+- **Test project ownership resolution**: Authenticated API key must resolve the correct project context.
+- **Never assume tenancy is covered indirectly**: Even with central scoping, write tests that confirm isolation from API behavior.
+
+---
+
+## 4. API Endpoint Testing Rules
+
+- **Happy path and failure path**: For important endpoints, test success, validation failure, unauthorized, forbidden (where relevant), not found (where relevant).
+- **Verify response shape**: Check structure; validate important keys (e.g. `data`, `meta`, `error`).
+- **Verify status codes**: Assert correct HTTP status codes.
+- **Verify persistence**: For create/update/delete, assert database changes clearly.
+- **Filtering and pagination**: For list endpoints, test pagination, filtering, sorting (if supported), tenant-scoped listing.
+
+---
+
+## 5. Authentication and Authorization Testing
+
+- **Test authentication boundaries**: Missing credentials, invalid credentials, revoked API keys, valid credentials.
+- **Test authorization separately**: Authenticated but unauthorized requests must fail correctly; authorized requests must succeed.
+- **Security-sensitive operations**: Test API key creation/revocation, module enablement, membership changes, file uploads with care.
+
+---
+
+## 6. Module Testing Rules
+
+- **Module enablement**: Verify enabled module endpoints work; disabled module endpoints fail appropriately.
+- **Module-specific business rules**: Each module must have tests for its critical behavior.
+- **Keep module tests close to module behavior**: Tests should reflect the module’s contract and expected behavior.
+
+---
+
+## 7. Factory and Fixture Rules
+
+- **Use factories for setup**: Prefer model factories over verbose manual setup.
+- **Keep factories realistic**: Believable defaults for readable scenarios.
+- **Avoid bloated setup**: Only create data needed for the test.
+- **Be explicit when it matters**: If state matters, define it clearly rather than hidden defaults.
+
+---
+
+## 8. Test Naming Rules
+
+- **Descriptive names**: Describe expected behavior (e.g. `it_creates_a_post_for_the_authenticated_project`, `it_does_not_return_posts_from_another_project`, `it_rejects_requests_with_a_revoked_api_key`).
+- **Avoid vague names**: Not `test_post`, `test_api`, `works_correctly`.
+- **Behavior-oriented**: Names should communicate what rule is being verified.
+
+---
+
+## 9. Performance and Reliability
+
+- **Deterministic**: No fragile timing or random behavior.
+- **Isolated**: No reliance on state from other tests.
+- **Reasonably fast**: Efficient setup, avoid unnecessary heavy fixtures.
+- **Clarity over micro-optimization**: Readable tests are more valuable than overly clever fast tests.
+
+---
+
+## 10. Minimum Expectations Per Important Feature
+
+Usually cover: successful behavior, validation failure, authentication failure, authorization failure (where applicable), tenancy isolation, database state changes, response structure.
+
+---
+
+## 11. Regression Testing
+
+- **Bug fixes include regression coverage**: Add or update a test that proves the issue is fixed.
+- **Protect critical invariants**: Tenancy isolation, API key behavior, module enablement must remain protected by tests.
+
+---
+
+## 12. Definition of Done for Testing
+
+A feature is not fully done unless: important behavior is covered, tenancy boundaries tested (where relevant), auth/authz tested (where relevant), response structure verified (where relevant), regression risks protected, and tests are readable and maintainable.

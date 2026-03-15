@@ -1,0 +1,149 @@
+---
+description: APIArsenal modular monolith architecture, tenancy, and module boundaries
+alwaysApply: true
+---
+
+# APIArsenal Architecture Rules
+
+## Project Context
+
+APIArsenal is a modular multi-tenant backend platform that allows developers to create real backend APIs by enabling prebuilt modules.
+
+This project must be built as a **modular monolith** with **strict architecture boundaries**, **project-based tenancy**, and **high-quality production-ready code**.
+
+The architecture must prioritize: modularity, maintainability, readability, security, scalability, consistency, explicit design, testability.
+
+---
+
+## 1. Core Architectural Direction
+
+### 1.1 Use a modular monolith
+The system must remain a modular monolith. Do not introduce microservices, distributed services, or unnecessary infrastructure complexity unless explicitly requested.
+
+### 1.2 Separate platform core from project modules
+Keep platform/core logic separate from reusable business modules.
+
+- **Platform/core domains**: Users, Projects, Project Members, API Keys, Tenancy, Usage Tracking, Module Registry, Documentation Registry.
+- **Business modules**: Auth, Users Module, Blog, Media, Settings, Orders, Chat.
+
+Do not mix platform responsibilities into module code.
+
+### 1.3 Organize code by domain
+Use domain-oriented or module-oriented structure. Prefer grouping code by feature/domain over dumping everything into generic framework folders.
+
+### 1.4 Prefer explicit architecture
+Critical system behavior must be easy to trace. Avoid hidden magic, fragile traits, or unclear shortcuts for: tenancy, module enablement, API authentication, permission checks, project scoping.
+
+---
+
+## 2. Tenant Architecture
+
+### 2.1 Project is the tenant
+The tenant boundary is always the **project**. All project-owned data and behavior must be scoped to a project.
+
+### 2.2 All project-owned tables must include project_id
+Any table that stores project-owned records must include `project_id`. Do not rely only on indirect relationships when explicit `project_id` improves security, readability, indexing, scoping, or maintainability.
+
+### 2.3 Never trust request input for project ownership
+Clients must never decide tenant ownership using request input. The active project must always be resolved from authenticated system context.
+
+### 2.4 Tenant scoping must be enforced centrally
+Do not rely on developers remembering to manually add `where('project_id', ...)` everywhere. Use shared patterns: project-owned base models, global scopes, project context services, request context resolution, project-aware repositories/actions.
+
+### 2.5 Prevent cross-project leakage at all times
+Every read and write path must be designed to prevent cross-project data access. If there is any ambiguity, choose the safer design.
+
+---
+
+## 3. Platform Boundaries
+
+### 3.1 Platform core responsibilities
+Platform code is responsible for: user accounts, dashboard authentication, project management, project membership, API key lifecycle, module registry, project module installation state, usage logging, billing-ready design later, docs composition.
+
+### 3.2 Business module responsibilities
+A module is responsible for: its entities, API behavior, validation, resources, docs definitions, seed/demo data, internal business logic.
+
+### 3.3 Keep boundaries clean
+Do not let platform code become mixed with module internals. Do not let one module directly own another module's business logic in a messy way. Cross-domain interaction must happen through clear contracts, actions, or services.
+
+---
+
+## 4. Module System Rules
+
+### 4.1 Every module must be self-contained
+Each module should own its own: models, actions, requests, controllers, resources, policies if needed, docs definitions, seeders if needed.
+
+### 4.2 All modules must follow the same structural pattern
+Do not invent a new structure for each module. Module architecture must stay consistent across the entire system.
+
+### 4.3 Module dependencies must be explicit
+If one module depends on another, make the dependency explicit. Do not create hidden runtime dependencies.
+
+### 4.4 Module enablement is project-specific
+A module is not simply globally "available." It must be enabled or disabled per project.
+
+### 4.5 Prefer fixed shared schema for MVP
+Use fixed shared module tables with `project_id`. Do not dynamically create physical tables per project unless explicitly requested.
+
+---
+
+## 5. Request Architecture
+
+### 5.1 Resolve project from authenticated API context
+Public API requests must resolve project context through API authentication, not URL ownership parameters.
+
+### 5.2 Do not expose project_id in runtime URLs unnecessarily
+If the API key determines the project context, do not place `project_id` in public API route paths.
+
+### 5.3 Build request context early
+As early as possible in the request lifecycle, resolve and attach: current project, current API key, enabled modules, current permission scope if applicable.
+
+### 5.4 All project-owned query paths must respect active project context
+No project-owned query should execute outside the active tenant context.
+
+---
+
+## 6. Folder and Domain Structure Rules
+
+### 6.1 Prefer domain/module-based code organization
+Structure code so related behavior stays together. Examples: `app/Domains/Platform/...`, `app/Domains/Modules/...`, `app/Core/...`, `app/Modules/...`.
+
+### 6.2 Avoid generic dumping
+Do not dump unrelated code into large generic folders with weak ownership.
+
+### 6.3 Keep module internals together
+A module's logic should be easy to discover in one place.
+
+---
+
+## 7. Extensibility Rules
+
+### 7.1 Design for future modules
+Every architectural decision should make it easier to add future modules without rewriting platform foundations.
+
+### 7.2 Do not overbuild configuration too early
+Start with clear fixed module behavior. Add advanced configurability later only when justified.
+
+### 7.3 Favor safe incremental growth
+Prefer architecture that scales by adding modules and domains cleanly, rather than architecture that requires repeated rewrites.
+
+---
+
+## 8. Documentation Architecture Rules
+
+### 8.1 Documentation must be module-driven
+Each module should define the documentation metadata for its endpoints.
+
+### 8.2 Project docs are composed from enabled modules
+Documentation shown to a project should reflect only the modules that are enabled for that project.
+
+### 8.3 Keep docs definitions close to module behavior
+Do not separate docs too far away from the code they describe.
+
+---
+
+## 9. Non-Negotiable Constraints
+
+**Always:** preserve modular monolith structure; preserve project-based tenancy; keep platform and module boundaries clean; enforce project scoping centrally; keep module structure consistent; avoid hidden coupling; design for maintainability first.
+
+**Never:** bypass tenancy boundaries; trust client-supplied project ownership; mix unrelated domains carelessly; introduce inconsistent module structures; add architectural shortcuts that create long-term fragility.

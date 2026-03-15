@@ -1,0 +1,135 @@
+---
+description: APIArsenal backend standards — Laravel, API, security, DB, tenancy, and definition of done
+alwaysApply: true
+---
+
+# APIArsenal Backend Rules
+
+## Project Context
+
+APIArsenal is a production-grade modular backend platform. All backend code must reflect high engineering standards.
+
+The codebase must prioritize: best code practices, readability, maintainability, security, consistency, explicit design, testability.
+
+---
+
+## 1. General Backend Principles
+
+- **1.1** Write production-quality code only. No temporary hacks, shortcut code, or prototype-quality implementations unless explicitly requested.
+- **1.2** Prefer clarity over cleverness. Choose code that is obvious, readable, and easy to maintain.
+- **1.3** Keep responsibilities small. Each class should have one clear responsibility.
+- **1.4** Follow existing project patterns. Do not invent a new implementation style if the project already has an established pattern.
+- **1.5** Make important behavior easy to trace. Critical logic must be explicit and reviewable.
+
+---
+
+## 2. Laravel Implementation Rules
+
+- **2.1 Keep controllers thin.** Controllers should only: receive the request, authorize when needed, delegate validation to request classes, call actions/services, return resources or standardized responses. Do not place business logic directly in controllers.
+- **2.2** Use Form Request classes for validation. All meaningful endpoint validation must use dedicated Form Request classes. Do not place large validation arrays inline in controllers.
+- **2.3** Use actions/use-cases for business logic. Business workflows must live in dedicated actions or service classes (e.g. CreateProjectAction, EnableProjectModuleAction, CreatePostAction, RevokeApiKeyAction).
+- **2.4** Avoid fat models. Eloquent models should mainly contain: relationships, casts, scopes, small domain helpers. Do not place large workflows or orchestration logic in models.
+- **2.5** Use dependency injection. Prefer constructor or method injection for dependencies. Avoid unnecessary manual instantiation.
+- **2.6** Prefer explicit services over vague helpers. Do not create generic classes such as Helper, Utility, Manager, CommonService. Use precise domain names instead.
+
+---
+
+## 3. API Rules
+
+- **3.1** APIs must be RESTful and predictable. Use clear conventional REST naming (e.g. GET/POST /posts, GET/PUT/DELETE /posts/{id}).
+- **3.2** Use API Resources for output. Do not return raw Eloquent models. All API responses should be shaped using API Resources or a standardized response layer.
+- **3.3** Use consistent response structure. Preferred keys: data, meta, error.
+- **3.4** Use proper status codes (200, 201, 204, 401, 403, 404, 422, etc.).
+- **3.5** Paginate list endpoints. Do not return unbounded collections.
+- **3.6** Keep public API shape stable. Do not introduce inconsistent payload shapes for similar endpoints.
+
+---
+
+## 4. Security Rules
+
+- **4.1** Security is mandatory. Every backend implementation must consider security from the start.
+- **4.2** Never store raw API keys. API keys must be hashed in storage; show the raw key only once at creation time.
+- **4.3** Authorize sensitive actions. Do not assume authenticated means authorized. Sensitive actions must be explicitly authorized.
+- **4.4** Never trust client ownership fields. Do not trust request input for ownership-sensitive fields such as project_id.
+- **4.5** Avoid careless mass assignment. Map input intentionally; use fillable/guarded carefully.
+- **4.6** Restrict exposed fields. Only expose fields intentionally through resources or transformers.
+- **4.7** Validate file uploads strictly (file type, size, allowed constraints). Do not trust client metadata.
+- **4.8** Audit important system actions (e.g. API key creation/revocation, module enable/disable, project membership changes).
+
+---
+
+## 5. Database Rules
+
+- **5.1** Migrations must be clear and reversible.
+- **5.2** Use proper indexes on frequently filtered, joined, or sorted columns (e.g. project_id, module_id, api_key_id, status, slug, created_at).
+- **5.3** Use foreign keys where appropriate for integrity and clarity.
+- **5.4** Prefer real columns over JSON for core business data. Do not store core structured relational data in JSON without a strong reason.
+- **5.5** Use JSON only for flexible metadata/config (module config, extensible metadata, optional settings).
+- **5.6** Design for queryability. If a field will be filtered, sorted, or joined regularly, it should usually be a real indexed column.
+
+---
+
+## 6. Tenancy Implementation Rules
+
+- **6.1** Scope all project-owned reads and writes to active project context.
+- **6.2** Enforce tenancy centrally. Do not rely on developers manually remembering tenant filters everywhere.
+- **6.3** Set project ownership from system context. Project ownership must come from authenticated runtime context, not from user input.
+- **6.4** Review every endpoint for data isolation. Verify it cannot leak cross-project data.
+
+---
+
+## 7. Performance Rules
+
+- **7.1** Avoid N+1 queries. Use eager loading where appropriate.
+- **7.2** Keep request handling lean. Avoid unnecessary work during request execution.
+- **7.3** Queue non-critical heavy work (usage log processing, image processing, notifications, large demo data seeding).
+- **7.4** Do not over-optimize prematurely. Prefer clean, correct code first; optimize obvious bottlenecks deliberately.
+
+---
+
+## 8. Error Handling Rules
+
+- **8.1** Fail clearly. Errors should be understandable to API consumers and maintainers.
+- **8.2** Do not swallow exceptions silently. Handle failures intentionally and log meaningful issues where appropriate.
+- **8.3** Use meaningful exception handling. Prefer domain-relevant exception paths over generic catch-all behavior.
+- **8.4** Validation errors must be structured. Validation failures must return predictable response shapes.
+
+---
+
+## 9. Naming Rules
+
+- **9.1** Use explicit names (e.g. CreatePostAction, UpdateProjectSettingsAction, RevokeApiKeyAction). Avoid Helper, Utils, CommonService, DataManager.
+- **9.2** Keep naming consistent across the codebase.
+- **9.3** Prefer domain language. Names should reflect the business/domain concept clearly.
+
+---
+
+## 10. Documentation and Code Comment Rules
+
+- **10.1** Prefer self-explanatory code. Readable code is better than excessive comments.
+- **10.2** Comment why, not what. Only add comments where intent, constraints, or non-obvious reasoning needs explanation.
+- **10.3** Keep docs definitions aligned with behavior. If API behavior changes, update related documentation metadata.
+
+---
+
+## 11. Refactoring Rules
+
+- **11.1** Improve touched code when reasonable. When modifying code, leave it cleaner if it can be done safely.
+- **11.2** Avoid broad unrelated rewrites. Stay focused on the requested task unless a larger refactor is explicitly requested.
+- **11.3** Prefer incremental refactoring. Avoid risky rewrites of stable code without good reason.
+
+---
+
+## 12. Definition of Done for Backend Work
+
+A backend task is only complete when:
+
+- Architecture conventions are respected
+- Controllers remain thin
+- Validation is implemented properly
+- Authorization is handled properly
+- Tenancy is enforced correctly
+- Response structure is consistent
+- Security concerns are considered
+- Code is clean and maintainable
+- Tests are added or updated when needed

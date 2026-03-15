@@ -1,0 +1,55 @@
+---
+description: APIArsenal UI design — layout, typography, colors, spacing, tables, forms, empty/loading states; Lucide icons; Stripe/Linear/Vercel/Supabase style.
+globs: "**/*.tsx,**/*.jsx,**/*.blade.php,resources/**"
+alwaysApply: false
+---
+
+# APIArsenal UI Design Rules
+
+## Layout
+
+Use a professional SaaS layout: **Sidebar**, **Topbar**, **Content area**. Spacing must be consistent across pages.
+
+## Typography
+
+Hierarchy must include: **Page title**, **Section title**, **Card title**, **Body text**, **Muted helper text**. Avoid weak typography.
+
+## Colors
+
+Use a minimal palette. Primary surfaces: **white**, **zinc**, **slate**. Accent color should be limited. Avoid colorful dashboards.
+
+## Spacing
+
+Use generous whitespace. Never crowd components.
+
+## Tables
+
+- Column hierarchy
+- Row hover
+- Right-aligned actions
+- Readable padding
+
+Avoid dense tables.
+
+## Forms
+
+- Grouped sections
+- Field descriptions
+- Validation messages
+- Buttons at logical positions
+
+## Empty States
+
+Every empty section must show: **message**, **explanation**, **action button**.
+
+## Loading States
+
+Use skeleton loaders when possible. Avoid raw "Loading…" text.
+
+## Icons
+
+Icons must come from **Lucide**. Use for clarity, not decoration.
+
+## UI Goal
+
+Feel similar to: **Stripe**, **Linear**, **Vercel**, **Supabase**. Avoid generic admin panel design.
